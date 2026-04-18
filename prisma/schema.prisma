@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum ConductorTipo {
+  CONTRATISTA
+  VINCULADO
+}
+
+enum ConductorEstado {
+  ACTIVO
+  INACTIVO
+}
+
+enum VehiculoEstado {
+  DISPONIBLE
+  EN_RUTA
+  EN_TALLER
+}
+
+enum NovedadTipo {
+  INCAPACIDAD
+  VACACIONES
+  DISPONIBLE
+  TALLER_ASEGURADORA
+  TALLER_MECANICO
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String?
+  email          String   @unique
+  password       String
+  role           UserRole @default(USER)
+  emailVerified  DateTime?
+  createdAt      DateTime @default(now())
+}
+
+model Conductor {
+  id         String          @id @default(cuid())
+  codigo     String          @unique
+  nombre     String
+  cedula     String
+  telefono   String
+  tipo       ConductorTipo
+  estado     ConductorEstado
+  turnos     Turno[]
+  novedades  Novedad[]       @relation("ConductorNovedades")
+  createdAt  DateTime        @default(now())
+}
+
+model Vehiculo {
+  id          String          @id @default(cuid())
+  vehiculoID  String          @unique
+  placa       String
+  tipo        String
+  capacidad   Int
+  estado      VehiculoEstado
+  secretaria   String
+  turnos      Turno[]
+  novedades   Novedad[]       @relation("VehiculoNovedades")
+  createdAt   DateTime        @default(now())
+}
+
+model Turno {
+  id          String    @id @default(cuid())
+  conductor   Conductor @relation(fields: [conductorId], references: [id])
+  conductorId String
+  vehiculo    Vehiculo  @relation(fields: [vehiculoId], references: [id])
+  vehiculoId  String
+  fecha       DateTime
+  horaInicio  String
+  horaFin     String
+  createdAt   DateTime  @default(now())
+
+  @@index([conductorId])
+  @@index([vehiculoId])
+}
+
+model Novedad {
+  id            String       @id @default(cuid())
+  tipo          NovedadTipo
+  descripcion   String
+  fechaInicio   DateTime
+  fechaFin      DateTime
+  conductor     Conductor?   @relation("ConductorNovedades", fields: [conductorId], references: [id])
+  conductorId   String?
+  vehiculo      Vehiculo?    @relation("VehiculoNovedades", fields: [vehiculoId], references: [id])
+  vehiculoId    String?
+  createdAt     DateTime     @default(now())
+}

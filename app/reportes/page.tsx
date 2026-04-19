@@ -16,7 +16,7 @@ function downloadCsv(filename: string, rows: string) {
 }
 
 export default function ReportesPage() {
-  const { data, isLoading } = useQuery(['reportes'], () => fetch('/api/reports').then((res) => res.json()));
+  const { data, isLoading } = useQuery({ queryKey: ['reportes'], queryFn: () => fetch('/api/reports').then((res) => res.json()) });
 
   if (isLoading) return <Shell><Loader /></Shell>;
   if (!data) return <Shell><div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-800">Error cargando los reportes.</div></Shell>;

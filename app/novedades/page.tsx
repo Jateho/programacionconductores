@@ -15,12 +15,13 @@ const formSchema = novedadSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function NovedadesPage() {
-  const conductoresQuery = useQuery(['conductores'], () => fetch('/api/conductores').then((res) => res.json()));
-  const vehiculosQuery = useQuery(['vehiculos'], () => fetch('/api/vehiculos').then((res) => res.json()));
-  const novedadesQuery = useQuery(['novedades'], () => fetch('/api/novedades').then((res) => res.json()));
-  const mutation = useMutation((payload: FormData) => fetch('/api/novedades', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-  }), {
+  const conductoresQuery = useQuery({ queryKey: ['conductores'], queryFn: () => fetch('/api/conductores').then((res) => res.json()) });
+  const vehiculosQuery = useQuery({ queryKey: ['vehiculos'], queryFn: () => fetch('/api/vehiculos').then((res) => res.json()) });
+  const novedadesQuery = useQuery({ queryKey: ['novedades'], queryFn: () => fetch('/api/novedades').then((res) => res.json()) });
+  const mutation = useMutation({
+    mutationFn: (payload: FormData) => fetch('/api/novedades', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    }),
     onSuccess: async () => { toast.success('Novedad registrada'); await novedadesQuery.refetch(); reset(); },
     onError: () => toast.error('No se pudo registrar la novedad'),
   });

@@ -54,6 +54,7 @@ model Conductor {
   telefono   String
   tipo       ConductorTipo
   estado     ConductorEstado
+  imagenUrl  String?
   turnos     Turno[]
   novedades  Novedad[]       @relation("ConductorNovedades")
   createdAt  DateTime        @default(now())
@@ -67,6 +68,7 @@ model Vehiculo {
   capacidad   Int
   estado      VehiculoEstado
   secretaria   String
+  imagenUrl   String?
   turnos      Turno[]
   novedades   Novedad[]       @relation("VehiculoNovedades")
   createdAt   DateTime        @default(now())

@@ -1,0 +1,14 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="56" fill="#0f172a"/>
+  <rect x="80" y="96" width="448" height="288" rx="32" fill="#1e293b"/>
+  <rect x="80" y="448" width="1040" height="232" rx="32" fill="#1e293b"/>
+  <rect x="240" y="220" width="520" height="180" rx="48" fill="#fff" opacity="0.9"/>
+  <rect x="340" y="300" width="320" height="88" rx="24" fill="#0f172a"/>
+  <rect x="240" y="420" width="560" height="96" rx="32" fill="#38bdf8"/>
+  <circle cx="360" cy="558" r="56" fill="#fff"/>
+  <circle cx="740" cy="558" r="56" fill="#fff"/>
+  <path d="M360 558H740" stroke="#0f172a" stroke-width="32" stroke-linecap="round"/>
+  <circle cx="360" cy="558" r="32" fill="#0f172a"/>
+  <circle cx="740" cy="558" r="32" fill="#0f172a"/>
+  <text x="90" y="620" fill="#94a3b8" font-family="Inter, sans-serif" font-size="44" font-weight="600">Flota moderna</text>
+</svg>

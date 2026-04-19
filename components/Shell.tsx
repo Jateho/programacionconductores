@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, Settings, TrendingUp, Truck, User, CalendarDays, Bell } from 'lucide-react';
+import { LogOut, Settings, TrendingUp, Truck, User, CalendarDays, Bell, Search, Sparkles } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: TrendingUp },
@@ -16,17 +16,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="grid min-h-screen grid-cols-[280px_1fr]">
-        <aside className="flex flex-col border-r border-slate-200 bg-white px-6 py-8">
+    <div className="min-h-screen bg-slate-100">
+      <div className="grid min-h-screen grid-cols-[280px_1fr] gap-6">
+        <aside className="flex flex-col border-r border-slate-200/70 bg-white/95 px-6 py-8 shadow-sm backdrop-blur-sm">
           <div className="mb-10 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-brand-600 text-white">FM</div>
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-brand-600 text-xl font-bold text-white shadow-lg">FM</div>
             <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">FleetManager</p>
-              <p className="text-lg font-semibold text-slate-900">Enterprise</p>
+              <p className="text-xs uppercase tracking-[0.33em] text-slate-400">FleetManager</p>
+              <p className="text-lg font-semibold text-slate-950">Enterprise</p>
             </div>
           </div>
-          <nav className="space-y-1">
+          <nav className="space-y-2">
             {navItems.map((item) => {
               const active = pathname === item.href;
               const Icon = item.icon;
@@ -54,17 +54,27 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
         </aside>
+
         <main className="px-6 py-8">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-sm text-slate-500">Gestión operativa</p>
-              <h1 className="text-3xl font-semibold text-slate-950">Panel de control</h1>
+          <div className="mx-auto max-w-7xl space-y-6">
+            <div className="rounded-[32px] border border-slate-200/70 bg-white/90 p-6 shadow-sm backdrop-blur-sm">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">Gestión operativa</p>
+                  <h1 className="text-3xl font-semibold text-slate-950">Panel de control</h1>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="inline-flex items-center gap-2 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-sm">
+                    <Search className="h-4 w-4 text-slate-400" /> Buscar
+                  </div>
+                  <div className="inline-flex items-center gap-3 rounded-3xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-700 shadow-sm">
+                    <Sparkles className="h-4 w-4 text-brand-600" /> Admin User
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="inline-flex items-center gap-3 rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-              <Bell className="h-4 w-4 text-brand-600" /> Admin User
-            </div>
+            {children}
           </div>
-          {children}
         </main>
       </div>
     </div>

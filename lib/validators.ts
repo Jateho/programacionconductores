@@ -7,6 +7,7 @@ export const conductorSchema = z.object({
   telefono: z.string().min(7, 'Teléfono requerido'),
   tipo: z.enum(['CONTRATISTA', 'VINCULADO']),
   estado: z.enum(['ACTIVO', 'INACTIVO']),
+  imagen: z.any().optional(),
 });
 
 export const vehiculoSchema = z.object({
@@ -16,6 +17,7 @@ export const vehiculoSchema = z.object({
   capacidad: z.number().min(1, 'Capacidad requerida'),
   estado: z.enum(['DISPONIBLE', 'EN_RUTA', 'EN_TALLER']),
   secretaria: z.string().min(2, 'Secretaría requerida'),
+  imagen: z.any().optional(),
 });
 
 export const turnoSchema = z.object({

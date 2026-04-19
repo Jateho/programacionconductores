@@ -1,0 +1,14 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="56" fill="#0f172a"/>
+  <rect x="80" y="96" width="448" height="288" rx="32" fill="#1e293b"/>
+  <rect x="80" y="448" width="1040" height="232" rx="32" fill="#1e293b"/>
+  <circle cx="320" cy="232" r="96" fill="#fff" opacity="0.9"/>
+  <path d="M250 320C250 276.65 286.65 240 330 240H450C493.35 240 530 276.65 530 320V352H250V320Z" fill="#fff" opacity="0.9"/>
+  <path d="M330 232C330 199.314 356.314 173 389 173H391C423.686 173 450 199.314 450 232V246H330V232Z" fill="#0f172a"/>
+  <rect x="736" y="208" width="320" height="48" rx="24" fill="#fff" opacity="0.8"/>
+  <rect x="736" y="280" width="240" height="48" rx="24" fill="#fff" opacity="0.6"/>
+  <rect x="736" y="352" width="500" height="48" rx="24" fill="#fff" opacity="0.3"/>
+  <rect x="736" y="424" width="420" height="48" rx="24" fill="#fff" opacity="0.3"/>
+  <path d="M240 572L320 500L380 540L450 500L510 560L680 450" stroke="#38bdf8" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="90" y="620" fill="#94a3b8" font-family="Inter, sans-serif" font-size="44" font-weight="600">Conductor destacado</text>
+</svg>

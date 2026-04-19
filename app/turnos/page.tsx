@@ -31,12 +31,13 @@ function formatDateKey(date: Date) {
 }
 
 export default function TurnosPage() {
-  const conductoresQuery = useQuery(['conductores'], () => fetch('/api/conductores').then((res) => res.json()));
-  const vehiculosQuery = useQuery(['vehiculos'], () => fetch('/api/vehiculos').then((res) => res.json()));
-  const turnosQuery = useQuery(['turnos'], () => fetch('/api/turnos').then((res) => res.json()));
-  const mutation = useMutation((payload: FormData) => fetch('/api/turnos', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-  }), {
+  const conductoresQuery = useQuery({ queryKey: ['conductores'], queryFn: () => fetch('/api/conductores').then((res) => res.json()) });
+  const vehiculosQuery = useQuery({ queryKey: ['vehiculos'], queryFn: () => fetch('/api/vehiculos').then((res) => res.json()) });
+  const turnosQuery = useQuery({ queryKey: ['turnos'], queryFn: () => fetch('/api/turnos').then((res) => res.json()) });
+  const mutation = useMutation({
+    mutationFn: (payload: FormData) => fetch('/api/turnos', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+    }),
     onSuccess: async () => { toast.success('Turno creado'); await turnosQuery.refetch(); reset(); },
     onError: async (error: any) => {
       const message = error?.message || 'No se pudo crear el turno';

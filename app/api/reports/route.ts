@@ -9,6 +9,14 @@ function hoursFromShifts(shifts: Array<{ horaInicio: string; horaFin: string }>)
   }, 0) / 60;
 }
 
+function daysFromNovedades(novedades: Array<{ fechaInicio: Date; fechaFin: Date }>) {
+  return novedades.reduce((total, novedad) => {
+    const diffTime = Math.abs(novedad.fechaFin.getTime() - novedad.fechaInicio.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return total + diffDays;
+  }, 0);
+}
+
 export async function GET() {
   const conductores = await prisma.conductor.findMany({
     include: {
@@ -26,8 +34,8 @@ export async function GET() {
 
   const conductorReport = conductores.map((conductor) => {
     const horasTrabajadas = hoursFromShifts(conductor.turnos);
-    const horasIncapacidad = hoursFromShifts(conductor.novedades.filter((n) => n.tipo === 'INCAPACIDAD'));
-    const horasVacaciones = hoursFromShifts(conductor.novedades.filter((n) => n.tipo === 'VACACIONES'));
+    const horasIncapacidad = daysFromNovedades(conductor.novedades.filter((n) => n.tipo === 'INCAPACIDAD'));
+    const horasVacaciones = daysFromNovedades(conductor.novedades.filter((n) => n.tipo === 'VACACIONES'));
     return {
       id: conductor.id,
       codigo: conductor.codigo,
@@ -41,8 +49,8 @@ export async function GET() {
 
   const vehiculoReport = vehiculos.map((vehiculo) => {
     const horasTrabajadas = hoursFromShifts(vehiculo.turnos);
-    const horasTallerAseguradora = hoursFromShifts(vehiculo.novedades.filter((n) => n.tipo === 'TALLER_ASEGURADORA'));
-    const horasTallerMecanico = hoursFromShifts(vehiculo.novedades.filter((n) => n.tipo === 'TALLER_MECANICO'));
+    const horasTallerAseguradora = daysFromNovedades(vehiculo.novedades.filter((n) => n.tipo === 'TALLER_ASEGURADORA'));
+    const horasTallerMecanico = daysFromNovedades(vehiculo.novedades.filter((n) => n.tipo === 'TALLER_MECANICO'));
     return {
       id: vehiculo.id,
       vehiculoID: vehiculo.vehiculoID,

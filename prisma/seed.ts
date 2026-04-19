@@ -17,7 +17,14 @@ async function main() {
     },
   });
 
-  const vehicles = Array.from({ length: 17 }, (_, index) => {
+  const vehicles: Array<{
+    vehiculoID: string;
+    placa: string;
+    tipo: string;
+    capacidad: number;
+    estado: 'DISPONIBLE' | 'EN_RUTA' | 'EN_TALLER';
+    secretaria: string;
+  }> = Array.from({ length: 17 }, (_, index) => {
     const id = String(index + 1).padStart(3, '0');
     return {
       vehiculoID: `V${id}`,
@@ -35,7 +42,7 @@ async function main() {
     { codigo: 'C001', nombre: 'Carlos Mendoza', cedula: '1.234.567.890', telefono: '312 456 7890', tipo: 'VINCULADO', estado: 'ACTIVO' },
     { codigo: 'C002', nombre: 'Sandra Castro', cedula: '2.345.678.901', telefono: '300 112 3344', tipo: 'CONTRATISTA', estado: 'INACTIVO' },
     { codigo: 'C003', nombre: 'Juan Gómez', cedula: '1.011.002.333', telefono: '315 777 8899', tipo: 'VINCULADO', estado: 'ACTIVO' },
-  ] });
+  ] as const });
 }
 
 main()

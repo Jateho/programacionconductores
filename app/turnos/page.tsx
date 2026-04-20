@@ -1,11 +1,15 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-toastify';
 import { Shell } from '@/components/Shell';
 import { Loader } from '@/components/Loader';
+import { Card } from '@/components/Card';
 import { turnoSchema } from '@/lib/validators';
 import { z } from 'zod';
 
@@ -31,9 +35,22 @@ function formatDateKey(date: Date) {
 }
 
 export default function TurnosPage() {
-  const conductoresQuery = useQuery({ queryKey: ['conductores'], queryFn: () => fetch('/api/conductores').then((res) => res.json()) });
-  const vehiculosQuery = useQuery({ queryKey: ['vehiculos'], queryFn: () => fetch('/api/vehiculos').then((res) => res.json()) });
-  const turnosQuery = useQuery({ queryKey: ['turnos'], queryFn: () => fetch('/api/turnos').then((res) => res.json()) });
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace('/auth/signin');
+    }
+  }, [router, status]);
+
+  const conductoresQuery = useQuery({ queryKey: ['conductores'], queryFn: () => fetch('/api/conductores').then((res) => res.json()), enabled: status === 'authenticated' });
+  const vehiculosQuery = useQuery({ queryKey: ['vehiculos'], queryFn: () => fetch('/api/vehiculos').then((res) => res.json()), enabled: status === 'authenticated' });
+  const turnosQuery = useQuery({ queryKey: ['turnos'], queryFn: () => fetch('/api/turnos').then((res) => res.json()), enabled: status === 'authenticated' });
+
+  if (status === 'loading' || status === 'unauthenticated') return <Shell><Loader /></Shell>;
+  if (!session) return <Shell><Loader /></Shell>;
+
   const mutation = useMutation({
     mutationFn: (payload: FormData) => fetch('/api/turnos', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
@@ -45,8 +62,24 @@ export default function TurnosPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => fetch(`/api/turnos/${id}`, { method: 'DELETE' }),
+    onSuccess: async () => {
+      toast.success('Turno eliminado');
+      await turnosQuery.refetch();
+    },
+    onError: () => toast.error('No se pudo eliminar el turno'),
+  });
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(formSchema) });
+  const [searchTerm, setSearchTerm] = useState('');
   const onSubmit = (values: FormData) => mutation.mutate(values);
+
+  const filteredTurnos = turnosQuery.data?.filter((turno: any) =>
+    turno.conductor?.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    turno.vehiculo?.vehiculoID.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    turno.conductor?.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
   if (conductoresQuery.isLoading || vehiculosQuery.isLoading || turnosQuery.isLoading) return <Shell><Loader /></Shell>;
 
@@ -59,51 +92,129 @@ export default function TurnosPage() {
     return acc;
   }, {});
 
+  const totalTurnos = turnosQuery.data.length;
+  const assignedConductores = conductoresQuery.data.length;
+  const assignedVehiculos = vehiculosQuery.data.length;
+
   return (
     <Shell>
       <div className="space-y-6">
-        <div className="card p-6">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm text-slate-500">Calendario semanal</p>
-              <h2 className="text-2xl font-semibold text-slate-950">Programación de Turnos</h2>
-            </div>
-          </div>
-          <div className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 lg:grid-cols-7">
-            {week.map((date, index) => {
-              const key = formatDateKey(date);
-              return (
-                <div key={key} className="rounded-3xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{weekDays[index]}</p>
-                  <p className="mt-2 text-lg font-semibold text-slate-900">{date.getDate()}</p>
-                  <div className="mt-4 space-y-3">
-                    {(groupedTurnos[key] || []).map((turno: any) => (
-                      <div key={turno.id} className="rounded-3xl border border-slate-200 bg-slate-100 p-3 text-xs text-slate-700">
-                        <p className="font-semibold">{turno.conductor?.codigo || 'Sin conductor'}</p>
-                        <p>{turno.vehiculo?.vehiculoID || 'Sin vehículo'}</p>
-                        <p>{turno.horaInicio} - {turno.horaFin}</p>
-                      </div>
-                    ))}
+        <div className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
+          <Card title="Calendario semanal" subtitle="Programación de turnos">
+            <div className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 lg:grid-cols-7">
+              {week.map((date, index) => {
+                const key = formatDateKey(date);
+                return (
+                  <div key={key} className="rounded-3xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{weekDays[index]}</p>
+                    <p className="mt-2 text-lg font-semibold text-slate-900">{date.getDate()}</p>
+                    <div className="mt-4 space-y-3">
+                      {(groupedTurnos[key] || []).map((turno: any) => (
+                        <div key={turno.id} className="rounded-3xl border border-slate-200 bg-slate-100 p-3 text-xs text-slate-700">
+                          <p className="font-semibold">{turno.conductor?.codigo || 'Sin conductor'}</p>
+                          <p>{turno.vehiculo?.vehiculoID || 'Sin vehículo'}</p>
+                          <p>{turno.horaInicio} - {turno.horaFin}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+          </Card>
+          <div className="space-y-6">
+            <Card title="Resumen rápido" subtitle="Estado de la semana">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-3xl bg-slate-50 p-5">
+                  <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Turnos totales</p>
+                  <p className="mt-3 text-3xl font-semibold text-slate-950">{totalTurnos}</p>
                 </div>
-              );
-            })}
+                <div className="rounded-3xl bg-slate-50 p-5">
+                  <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Conductores</p>
+                  <p className="mt-3 text-3xl font-semibold text-slate-950">{assignedConductores}</p>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-3xl bg-slate-50 p-5">
+                  <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Vehículos</p>
+                  <p className="mt-3 text-3xl font-semibold text-slate-950">{assignedVehiculos}</p>
+                </div>
+                <div className="rounded-3xl bg-slate-50 p-5">
+                  <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Turnos activos</p>
+                  <p className="mt-3 text-3xl font-semibold text-slate-950">{filteredTurnos.length}</p>
+                </div>
+              </div>
+            </Card>
+            <Card title="Nuevo turno" subtitle="Agenda una nueva actividad">
+              <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">Conductor</span>
+                  <select className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" {...register('conductorId')}>
+                    <option value="">Seleccionar conductor</option>
+                    {conductoresQuery.data.map((conductor: any) => (
+                      <option key={conductor.id} value={conductor.id}>{conductor.codigo} — {conductor.nombre}</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-red-600">{errors.conductorId?.message}</p>
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">Vehículo</span>
+                  <select className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" {...register('vehiculoId')}>
+                    <option value="">Seleccionar vehículo</option>
+                    {vehiculosQuery.data.map((vehiculo: any) => (
+                      <option key={vehiculo.id} value={vehiculo.id}>{vehiculo.vehiculoID} — {vehiculo.placa}</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-red-600">{errors.vehiculoId?.message}</p>
+                </label>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="text-sm font-medium text-slate-700">Fecha</span>
+                    <input type="date" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" {...register('fecha')} />
+                    <p className="mt-1 text-xs text-red-600">{errors.fecha?.message}</p>
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium text-slate-700">Hora inicio</span>
+                    <input type="time" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" {...register('horaInicio')} />
+                    <p className="mt-1 text-xs text-red-600">{errors.horaInicio?.message}</p>
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">Hora fin</span>
+                  <input type="time" className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3" {...register('horaFin')} />
+                  <p className="mt-1 text-xs text-red-600">{errors.horaFin?.message}</p>
+                </label>
+                <button type="submit" className="w-full rounded-2xl bg-brand-600 px-4 py-3 text-white hover:bg-brand-700">Crear turno</button>
+              </form>
+            </Card>
           </div>
         </div>
         <div className="grid gap-6 xl:grid-cols-[0.9fr_0.95fr]">
           <div className="card p-6">
-            <h2 className="mb-4 text-xl font-semibold">Turnos recientes</h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Turnos recientes</h2>
+              <input
+                type="text"
+                placeholder="Buscar turnos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm"
+              />
+            </div>
             <div className="space-y-4">
-              {turnosQuery.data.slice(0, 6).map((turno: any) => (
+              {filteredTurnos.slice(0, 6).map((turno: any) => (
                 <div key={turno.id} className="rounded-3xl border border-slate-200 p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="font-semibold text-slate-900">{new Date(turno.fecha).toLocaleDateString()}</p>
                       <p className="text-sm text-slate-500">{turno.conductor?.codigo} / {turno.vehiculo?.vehiculoID}</p>
                     </div>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                      {turno.horaInicio} - {turno.horaFin}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                        {turno.horaInicio} - {turno.horaFin}
+                      </span>
+                      <button onClick={() => deleteMutation.mutate(turno.id)} className="rounded-lg bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700">Eliminar</button>
+                    </div>
                   </div>
                 </div>
               ))}

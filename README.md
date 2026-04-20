@@ -1,4 +1,4 @@
-# FleetManager Enterprise
+npm rn# FleetManager Enterprise
 
 Aplicación web de gestión de conductores y vehículos construida con Next.js (App Router), TypeScript, TailwindCSS, Prisma y PostgreSQL.
 

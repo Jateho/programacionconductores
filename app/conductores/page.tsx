@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-toastify';
 import { Shell } from '@/components/Shell';
 import { Loader } from '@/components/Loader';
+import { Card } from '@/components/Card';
 import { conductorSchema } from '@/lib/validators';
 import { z } from 'zod';
 
@@ -15,10 +18,23 @@ const formSchema = conductorSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function ConductoresPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace('/auth/signin');
+    }
+  }, [router, status]);
+
   const { data = [], isLoading, refetch } = useQuery({
     queryKey: ['conductores'],
     queryFn: () => fetch('/api/conductores').then((res) => res.json()),
+    enabled: status === 'authenticated',
   });
+
+  if (status === 'loading' || status === 'unauthenticated') return <Shell><Loader /></Shell>;
+  if (!session) return <Shell><Loader /></Shell>;
 
   const mutation = useMutation({
     mutationFn: async (payload: FormData) => {
@@ -45,9 +61,25 @@ export default function ConductoresPage() {
     onError: () => toast.error('No se pudo crear el conductor'),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => fetch(`/api/conductores/${id}`, { method: 'DELETE' }),
+    onSuccess: async () => {
+      toast.success('Conductor eliminado');
+      await refetch();
+    },
+    onError: () => toast.error('No se pudo eliminar el conductor'),
+  });
+
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(formSchema) });
   const imagenFile = watch('imagen');
-  const [previewUrl, setPreviewUrl] = useState<string | undefined>();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string>();
+
+  const filteredData = (data ?? []).filter((conductor: any) =>
+    conductor.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    conductor.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    conductor.cedula.includes(searchTerm)
+  );
 
   useEffect(() => {
     if (!imagenFile?.[0]) {
@@ -102,10 +134,19 @@ export default function ConductoresPage() {
         </section>
 
         <div className="grid gap-6 xl:grid-cols-[0.95fr_0.95fr]">
-          <div className="space-y-4 rounded-[32px] bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-900">Conductores registrados</h2>
-            <div className="space-y-4">
-              {(data ?? []).map((conductor: any) => (
+          <Card title="Conductores registrados" subtitle="Lista activa de la flota">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-slate-500">Resultados encontrados: {filteredData.length}</p>
+              <input
+                type="text"
+                placeholder="Buscar conductores..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm"
+              />
+            </div>
+            <div className="mt-6 space-y-4">
+              {filteredData.map((conductor: any) => (
                 <div key={conductor.id} className="grid gap-4 rounded-[28px] border border-slate-200 p-5 sm:grid-cols-[auto_1fr] sm:items-center">
                   <div className="h-24 w-24 overflow-hidden rounded-3xl bg-slate-100">
                     <img
@@ -121,14 +162,17 @@ export default function ConductoresPage() {
                     </div>
                     <p className="text-sm text-slate-500">Código {conductor.codigo} · {conductor.tipo}</p>
                     <p className="text-sm text-slate-500">Cédula {conductor.cedula} · {conductor.telefono}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700">Editar</button>
+                      <button onClick={() => deleteMutation.mutate(conductor.id)} className="rounded-lg bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700">Eliminar</button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="rounded-[32px] bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-semibold text-slate-900">Agregar conductor</h2>
+          <Card title="Agregar conductor" subtitle="Nuevo registro">
             <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
@@ -194,7 +238,7 @@ export default function ConductoresPage() {
                 Agregar conductor
               </button>
             </form>
-          </div>
+          </Card>
         </div>
       </div>
     </Shell>

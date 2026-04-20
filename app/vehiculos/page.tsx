@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'react-toastify';
 import { Shell } from '@/components/Shell';
 import { Loader } from '@/components/Loader';
+import { Card } from '@/components/Card';
 import { vehiculoSchema } from '@/lib/validators';
 import { z } from 'zod';
 
@@ -15,10 +18,23 @@ const formSchema = vehiculoSchema;
 type FormData = z.infer<typeof formSchema>;
 
 export default function VehiculosPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.replace('/auth/signin');
+    }
+  }, [router, status]);
+
   const { data = [], isLoading, refetch } = useQuery({
     queryKey: ['vehiculos'],
     queryFn: () => fetch('/api/vehiculos').then((res) => res.json()),
+    enabled: status === 'authenticated',
   });
+
+  if (status === 'loading' || status === 'unauthenticated') return <Shell><Loader /></Shell>;
+  if (!session) return <Shell><Loader /></Shell>;
 
   const mutation = useMutation({
     mutationFn: async (payload: FormData) => {
@@ -45,9 +61,25 @@ export default function VehiculosPage() {
     onError: () => toast.error('No se pudo crear el vehículo'),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => fetch(`/api/vehiculos/${id}`, { method: 'DELETE' }),
+    onSuccess: async () => {
+      toast.success('Vehículo eliminado');
+      await refetch();
+    },
+    onError: () => toast.error('No se pudo eliminar el vehículo'),
+  });
+
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(formSchema) });
   const imagenFile = watch('imagen');
-  const [previewUrl, setPreviewUrl] = useState<string | undefined>();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string>();
+
+  const filteredData = (data ?? []).filter((vehiculo: any) =>
+    vehiculo.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vehiculo.vehiculoID.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vehiculo.tipo.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   useEffect(() => {
     if (!imagenFile?.[0]) {
@@ -102,10 +134,19 @@ export default function VehiculosPage() {
         </section>
 
         <div className="grid gap-6 xl:grid-cols-[0.95fr_0.95fr]">
-          <div className="space-y-4 rounded-[32px] bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-slate-900">Vehículos registrados</h2>
-            <div className="space-y-4">
-              {(data ?? []).map((vehiculo: any) => (
+          <Card title="Vehículos registrados" subtitle="Flota disponible">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm text-slate-500">Resultados encontrados: {filteredData.length}</p>
+              <input
+                type="text"
+                placeholder="Buscar vehículos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm"
+              />
+            </div>
+            <div className="mt-6 space-y-4">
+              {filteredData.map((vehiculo: any) => (
                 <div key={vehiculo.id} className="grid gap-4 rounded-[28px] border border-slate-200 p-5 sm:grid-cols-[auto_1fr] sm:items-center">
                   <div className="h-24 w-24 overflow-hidden rounded-3xl bg-slate-100">
                     <img
@@ -121,14 +162,17 @@ export default function VehiculosPage() {
                     </div>
                     <p className="text-sm text-slate-500">{vehiculo.vehiculoID} · {vehiculo.tipo}</p>
                     <p className="text-sm text-slate-500">Secretaría {vehiculo.secretaria} · Capacidad {vehiculo.capacidad}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700">Editar</button>
+                      <button onClick={() => deleteMutation.mutate(vehiculo.id)} className="rounded-lg bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700">Eliminar</button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="rounded-[32px] bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-semibold text-slate-900">Agregar vehículo</h2>
+          <Card title="Agregar vehículo" subtitle="Nueva unidad">
             <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">ID de vehículo</span>
@@ -190,7 +234,7 @@ export default function VehiculosPage() {
                 Agregar vehículo
               </button>
             </form>
-          </div>
+          </Card>
         </div>
       </div>
     </Shell>

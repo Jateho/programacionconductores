@@ -1,0 +1,19 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="56" fill="#f8fbff"/>
+  <g opacity="0.9">
+    <rect x="80" y="80" width="1040" height="520" rx="44" fill="#e2efff"/>
+    <path d="M160 260C220 220 320 200 420 220C520 240 620 300 700 280C780 260 860 180 940 200C1020 220 1060 300 1080 360" stroke="#93c5fd" stroke-width="24" stroke-linecap="round"/>
+    <path d="M170 360C230 320 330 300 430 320C530 340 630 400 710 380C790 360 870 280 950 300C1030 320 1070 400 1090 460" stroke="#93c5fd" stroke-width="24" stroke-linecap="round"/>
+    <circle cx="260" cy="220" r="28" fill="#1d4ed8"/>
+    <circle cx="730" cy="250" r="28" fill="#2563eb"/>
+    <circle cx="1030" cy="390" r="28" fill="#1d4ed8"/>
+    <circle cx="520" cy="430" r="28" fill="#2563eb"/>
+  </g>
+  <rect x="90" y="620" width="420" height="120" rx="30" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="140" y="675" fill="#0f172a" font-family="Inter, sans-serif" font-size="32" font-weight="700">14 unidades en línea</text>
+  <text x="140" y="720" fill="#64748b" font-family="Inter, sans-serif" font-size="20">Ubicaciones activas de la flota</text>
+  <path d="M620 640L730 640L760 690L740 720" stroke="#1d4ed8" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="760" cy="690" r="18" fill="#2563eb"/>
+  <rect x="630" y="730" width="380" height="50" rx="25" fill="#e2efff"/>
+  <text x="650" y="764" fill="#1d4ed8" font-family="Inter, sans-serif" font-size="18" font-weight="600">Ver mapa completo</text>
+</svg>
